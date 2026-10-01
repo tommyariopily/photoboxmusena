@@ -69,10 +69,10 @@
   /* Gambar dasar (video atau foto galeri) memenuhi kanvas, meniru object-fit: cover */
   function drawBase(x) {
     const W = S.W, H = S.H;
-    x.fillStyle = '#111'; x.fillRect(0, 0, W, H);
+    x.fillStyle = S.mode === 'photo' ? '#fff' : '#111'; x.fillRect(0, 0, W, H);
     if (S.mode === 'photo' && S.photo) {
       const p = S.photo, k = Math.max(W / p.width, H / p.height) * S.zoom;
-      const dw = p.width * k, dh = p.height * k, mx = (dw - W) / 2, my = (dh - H) / 2;
+      const dw = p.width * k, dh = p.height * k, mx = Math.abs(dw - W) / 2, my = Math.abs(dh - H) / 2;
       S.ox = Math.max(-mx, Math.min(mx, S.ox)); S.oy = Math.max(-my, Math.min(my, S.oy));
       x.drawImage(p, (W - dw) / 2 + S.ox, (H - dh) / 2 + S.oy, dw, dh);
     } else {
@@ -88,14 +88,27 @@
   function renderPhoto() { drawBase($('pc').getContext('2d')); }
 
   function bindDrag() {
-    const pc = $('pc'); let d = null;
-    pc.onpointerdown = e => { d = { x: e.clientX, y: e.clientY, ox: S.ox, oy: S.oy }; pc.setPointerCapture(e.pointerId); };
-    pc.onpointermove = e => {
-      if (!d) return;
-      const f = S.W / pc.getBoundingClientRect().width;
-      S.ox = d.ox + (e.clientX - d.x) * f; S.oy = d.oy + (e.clientY - d.y) * f; renderPhoto();
+    const pc = $('pc'), P = new Map(); let g = null;
+    const setZoom = z => { S.zoom = Math.max(0.3, Math.min(4, z)); $('zoom').value = S.zoom; };
+    const pts = () => [...P.values()];
+    const center = a => a.length > 1 ? { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 } : a[0];
+    const dist = a => Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+    const snap = () => {
+      const a = pts(); if (!a.length) { g = null; return; }
+      const c = center(a);
+      g = { ox: S.ox, oy: S.oy, zoom: S.zoom, x: c.x, y: c.y, d: a.length > 1 ? dist(a) : 0 };
     };
-    pc.onpointerup = pc.onpointercancel = () => { d = null; };
+    pc.onpointerdown = e => { P.set(e.pointerId, { x: e.clientX, y: e.clientY }); pc.setPointerCapture(e.pointerId); snap(); };
+    pc.onpointermove = e => {
+      if (!P.has(e.pointerId) || !g) return;
+      P.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const a = pts(), c = center(a), f = S.W / pc.getBoundingClientRect().width;
+      if (a.length > 1 && g.d) setZoom(g.zoom * dist(a) / g.d); // cubit = zoom
+      S.ox = g.ox + (c.x - g.x) * f; S.oy = g.oy + (c.y - g.y) * f; // geser
+      renderPhoto();
+    };
+    pc.onpointerup = pc.onpointercancel = e => { P.delete(e.pointerId); snap(); };
+    pc.onwheel = e => { e.preventDefault(); setZoom(S.zoom * (e.deltaY < 0 ? 1.08 : 0.92)); renderPhoto(); };
     $('zoom').oninput = e => { S.zoom = +e.target.value; renderPhoto(); };
   }
 
