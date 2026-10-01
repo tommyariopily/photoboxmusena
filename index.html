@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Photo Box</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <h1 id="title">PHOTO BOX</h1>
+
+    <section id="camView">
+      <div class="stage" id="stage">
+        <video id="video" autoplay playsinline muted></video>
+        <img id="overlay" alt="" hidden>
+        <div id="count" hidden></div>
+        <div id="msg" class="msg">Menyiapkan kamera…</div>
+      </div>
+      <div class="row">
+        <button id="btnSwitch" class="btn ghost">🔄 Ganti Kamera</button>
+        <button id="btnShoot" class="btn big" disabled>📷 Ambil Foto</button>
+      </div>
+      <h2>Pilih Frame</h2>
+      <div id="gallery" class="gallery"></div>
+    </section>
+
+    <section id="resultView" hidden>
+      <div class="stage"><img id="resultImg" alt="Hasil foto"></div>
+      <div class="row wrap">
+        <button id="btnRetake" class="btn ghost">📷 Foto Ulang</button>
+        <button id="btnDownload" class="btn">⬇️ Download</button>
+        <button id="btnShare" class="btn ghost" hidden>📤 Bagikan</button>
+        <button id="btnSave" class="btn">☁️ Simpan ke Drive</button>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
+  </main>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
